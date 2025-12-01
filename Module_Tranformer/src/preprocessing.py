@@ -8,6 +8,7 @@ PROFANITY_PATTERNS = [
     (r'a[\W_]*s[\W_]*s[\W_]*h?[\W_]*o?[\W_]*l[\W_]*e?', 'asshole'),
     (r'd[\W_]*a[\W_]*m[\W_]*n', 'damn'),
     (r'idi0t', 'idiot'),
+    (r'h0le', 'hole'),
 ]
 
 # 2. Slang Map
