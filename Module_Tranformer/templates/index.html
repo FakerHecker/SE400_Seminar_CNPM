@@ -70,6 +70,11 @@
         color: #721c24;
         border: 1px solid #f5c6cb;
       }
+      .obscene {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+      }
       .bar-row {
         display: flex;
         align-items: center;
@@ -148,25 +153,27 @@
           });
           const data = await response.json();
 
-          // Render Results
           const verdictBox = document.getElementById("verdictBox");
-          if (data.is_toxic) {
-            verdictBox.textContent = "⚠️ TOXIC CONTENT DETECTED";
-            verdictBox.className = "verdict toxic";
-          } else {
-            verdictBox.textContent = "✅ CLEAN CONTENT";
-            verdictBox.className = "verdict clean";
-          }
+          verdictBox.className = "verdict " + data.color;
+
+          let icon = "✅ ";
+          if (data.color === "toxic") icon = "🚫 ";
+          if (data.color === "obscene") icon = "⚠️ ";
+
+          verdictBox.textContent = icon + data.status;
 
           document.getElementById("processedText").textContent =
             data.cleaned_text;
 
-          // Render Bars
           let barsHtml = "";
           for (const [label, score] of Object.entries(data.predictions)) {
             const pct = (score * 100).toFixed(1);
-            // Làm mờ nếu điểm thấp
             const opacity = score > 0.5 ? 1 : 0.3;
+            let barColor = "#e74c3c";
+
+            if (label === "obscene" && data.color === "obscene") {
+              barColor = "#ffc107";
+            }
 
             barsHtml += `
                     <div class="bar-row" style="opacity: ${
@@ -174,7 +181,7 @@
                     }">
                         <div class="label-name">${label}</div>
                         <div class="progress-bg">
-                            <div class="progress-fill" style="width: ${pct}%; opacity: ${opacity}"></div>
+                            <div class="progress-fill" style="width: ${pct}%; opacity: ${opacity}; background-color: ${barColor}"></div>
                         </div>
                         <div class="score-val">${score.toFixed(4)}</div>
                     </div>

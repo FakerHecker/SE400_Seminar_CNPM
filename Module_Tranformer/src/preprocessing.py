@@ -1,73 +1,68 @@
 import re
 
-# 1. Obfuscation Patterns
+# 1. PROFANITY PATTERNS – BẮT BIẾN THỂ / OBFUSCATED PROFANITY
+# Giữ lại danh sách này vì nó giúp Tokenizer hiểu từ gốc
 PROFANITY_PATTERNS = [
-    (r'f[\W_]*u[\W_]*c[\W_]*k', 'fuck'),
-    (r'sh[\W_]*i[\W_]*t', 'shit'),
-    (r'b[\W_]*i[\W_]*t[\W_]*c[\W_]*h', 'bitch'),
+    (r'f[\W_]*u[\W_]*c[\W_]*k+', 'fuck'),
+    (r'f[\W_]*u[\W_]*k+', 'fuck'),
+    (r'f[\W_]*u[\W_]*q+', 'fuck'),
+    (r'f[\W_]*v[\W_]*c[\W_]*k+', 'fuck'),
+    (r'f[\W_]*u[\W_]*x+', 'fuck'),
+    (r"f[\W_]*u[\W_]*c?[\W_]*k[\W_]*in[g']?", "fucking"),
+    (r's[\W_]*h[\W_]*i[\W_]*t+', 'shit'),
+    (r's[\W_]*h[\W_]*1[\W_]*t+', 'shit'),
+    (r's[\W_]*h[\W_]*\*[\W_]*t', 'shit'),
+    (r'b[\W_]*i[\W_]*t[\W_]*c[\W_]*h+', 'bitch'),
+    (r'b[\W_]*1[\W_]*t[\W_]*c[\W_]*h+', 'bitch'),
+    (r'a[\W_]*s[\W_]*s+', 'ass'),
     (r'a[\W_]*s[\W_]*s[\W_]*h?[\W_]*o?[\W_]*l[\W_]*e?', 'asshole'),
     (r'd[\W_]*a[\W_]*m[\W_]*n', 'damn'),
-    (r'idi0t', 'idiot'),
-    (r'h0le', 'hole'),
+    (r'i[\W_]*d[\W_]*i[\W_]*o[\W_]*t+', 'idiot'),
+    (r'1[\W_]*d[\W_]*i[\W_]*0[\W_]*t+', 'idiot'),
+    (r'd[\W_]*i[\W_]*c[\W_]*k+', 'dick'),
+    (r'p[\W_]*u[\W_]*s[\W_]*s[\W_]*y+', 'pussy'),
+    (r's[\W_]*l[\W_]*u[\W_]*t+', 'slut'),
+    (r'w[\W_]*h[\W_]*o[\W_]*r[\W_]*e+', 'whore'),
 ]
 
-# 2. Slang Map
-SLANG_MAP = {
-    r'\bkys\b': 'kill yourself',
-    r'\bstfu\b': 'shut the fuck up',
-    r'\bgtfo\b': 'get the fuck out',
-    r'\bu\b': 'you',
-    r'\bur\b': 'your',
-    r'\br\b': 'are',
+# 2. LEET NORMALIZATION
+LEET_MAP = {
+    '@': 'a', '$': 's', '0': 'o', '1': 'i', '!': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't'
 }
 
-# 3. Positive Context Patterns
-POSITIVE_ADJECTIVES = [
-    "amazing", "awesome", "brilliant", "excellent", "fantastic", 
-    "good", "great", "incredible", "love", "lovely", "magnificent", 
-    "nice", "perfect", "spectacular", "superb", "wonderful", "beautiful",
-    "best", "better", "genius", "talented", "smart", "funny", "cool"
-]
-positive_pattern = "|".join(POSITIVE_ADJECTIVES)
-CONTEXT_PATTERN = re.compile(
-    rf"\b(fucking|fuckin|damn|bloody)\s+({positive_pattern})\b",
-    flags=re.IGNORECASE
-)
+def normalize_leet(text):
+    for k, v in LEET_MAP.items():
+        text = text.replace(k, v)
+    return text
+
+def reduce_repetition(text):
+    # cooool -> cool
+    return re.sub(r'(.)\1{2,}', r'\1\1', text)
 
 def clean_text_bert(text):
+    """
+    Standard Cleaning for RoBERTa.
+    """
     if not isinstance(text, str):
         return ""
-        
+    
     text = text.lower()
-    
-    # --- MỚI: Xử lý ngữ cảnh đặc biệt "Killer" ---
-    # Nếu "killer" đi với "at/in/on/with" -> thường là khen (giỏi về cái gì đó)
-    # killer at chess -> expert at chess
-    text = re.sub(r'\bkiller\s+(at|in|on|with)\b', r'expert \1', text)
-    
-    # Nếu "killer" đi với các từ tích cực (killer app, killer feature, killer move)
-    text = re.sub(r'\bkiller\s+(app|feature|move|shot|deal)\b', r'great \1', text)
-    # ---------------------------------------------
 
-    # 1. Normalize obfuscated profanity
+    # Normalize leet: h3ll -> hell
+    text = normalize_leet(text)
+
+    # Replace obfuscated profanity
     for pattern, repl in PROFANITY_PATTERNS:
         text = re.sub(pattern, repl, text, flags=re.IGNORECASE)
-    
-    # 2. Normalize Slang
-    for pattern, repl in SLANG_MAP.items():
-        text = re.sub(pattern, repl, text)
 
-    # 3. Handle Positive Context (fucking amazing -> very amazing)
-    text = CONTEXT_PATTERN.sub(lambda m: f"very {m.group(2)}", text)
+    # Reduce repeated characters
+    text = reduce_repetition(text)
 
-    # 4. Normalize leet speak & chars
-    text = re.sub(r'@', 'a', text)
-    text = re.sub(r'\$', 's', text)
-    text = re.sub(r'(.)\1{2,}', r'\1\1', text) # coool -> cool
-    
-    # 5. Cleanup
+    # Remove URLs, IPs (Thay bằng khoảng trắng)
     text = re.sub(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ' ', text)
     text = re.sub(r'http\S+|www\.\S+', ' ', text)
+
+    # Chuẩn hóa khoảng trắng (Quan trọng: Không xóa dấu câu)
     text = re.sub(r'\s+', ' ', text).strip()
-    
+
     return text

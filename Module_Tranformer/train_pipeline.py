@@ -20,9 +20,19 @@ def main():
     if not os.path.exists(config.DATA_PATH):
         raise FileNotFoundError(f"Data not found at {config.DATA_PATH}")
         
-    df = pd.read_csv(config.DATA_PATH)
-    # Uncomment next line for quick testing
-    # df = df.sample(5000).reset_index(drop=True)
+    df_original = pd.read_csv(config.DATA_PATH)
+    
+    # Load thêm Augmented Data ---
+    aug_path = os.path.join(os.path.dirname(config.DATA_PATH), 'augmented_data.csv')
+    if os.path.exists(aug_path):
+        print("Found augmented data! Merging...")
+        df_aug = pd.read_csv(aug_path)
+        # Gộp 2 dataframe
+        df = pd.concat([df_original, df_aug], ignore_index=True)
+        df = df.sample(frac=1, random_state=42).reset_index(drop=True)
+        print(f"New dataset size: {len(df)} (Original: {len(df_original)} + Aug: {len(df_aug)})")
+    else:
+        df = df_original
     
     # 2. Preprocess
     print("Preprocessing texts...")
@@ -43,7 +53,7 @@ def main():
     num_positives = np.clip(num_positives, 1, None) 
     class_weights = (len(train_labels) - num_positives) / num_positives
     # class_weights = np.clip(class_weights, 1.0, 20.0)
-    class_weights = np.clip(class_weights, 1.0, 8.0)
+    class_weights = np.clip(class_weights, 1.0, 5.0)
     print(f"Class Weights: {class_weights}")
 
     # 5. Tokenizer & Datasets

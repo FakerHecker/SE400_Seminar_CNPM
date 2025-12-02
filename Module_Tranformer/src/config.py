@@ -45,7 +45,7 @@ MAX_LEN = 128
 BATCH_SIZE = 8
 GRADIENT_ACCUMULATION_STEPS = 2
 EPOCHS = 4 
-LEARNING_RATE = 2e-5
+LEARNING_RATE = 1e-5
 FP16 = True
 
 LABEL_COLS = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']

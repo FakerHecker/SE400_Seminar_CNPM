@@ -1,5 +1,4 @@
 import torch
-# from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
 from transformers import RobertaTokenizerFast, RobertaForSequenceClassification
 from src.config import MODEL_SAVE_PATH, MODEL_NAME, MAX_LEN, DEVICE, LABEL_COLS
 from src.preprocessing import clean_text_bert
@@ -25,10 +24,8 @@ class ToxicPredictor:
         if self.model is None:
             return {"error": "Model not loaded"}
 
-        # Preprocess
         cleaned_text = clean_text_bert(text)
         
-        # Tokenize
         encoding = self.tokenizer.encode_plus(
             cleaned_text,
             add_special_tokens=True,
@@ -43,24 +40,42 @@ class ToxicPredictor:
         input_ids = encoding['input_ids'].to(self.device)
         attention_mask = encoding['attention_mask'].to(self.device)
 
-        # Inference
         with torch.no_grad():
             outputs = self.model(input_ids, attention_mask=attention_mask)
             logits = outputs.logits
             probs = torch.sigmoid(logits).cpu().numpy()[0]
 
-        # Format results
         result = {
             "text": text,
             "cleaned_text": cleaned_text,
             "predictions": {},
-            "is_toxic": False
+            "status": "CLEAN",
+            "color": "clean"
         }
         
+        harmful_labels = ['toxic', 'severe_toxic', 'threat', 'insult', 'identity_hate']
+        is_harmful = False
+        is_obscene = False
+        threshold = 0.5
+
         for idx, label in enumerate(LABEL_COLS):
             score = float(probs[idx])
             result["predictions"][label] = score
-            if score > 0.5:
-                result["is_toxic"] = True
+            
+            if score > threshold:
+                if label in harmful_labels:
+                    is_harmful = True
+                if label == 'obscene':
+                    is_obscene = True
+
+        if is_harmful:
+            result["status"] = "TOXIC CONTENT DETECTED"
+            result["color"] = "toxic"
+        elif is_obscene:
+            result["status"] = "PROFANITY DETECTED (SAFE CONTEXT)"
+            result["color"] = "obscene"
+        else:
+            result["status"] = "CLEAN CONTENT"
+            result["color"] = "clean"
                 
         return result
