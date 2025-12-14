@@ -1,51 +1,57 @@
-# import torch
-# import os
+"""
+Configuration file cho Toxic Content Detection Model
 
-# # Device configuration
-# DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-# # Paths
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# DATA_PATH = os.path.join(BASE_DIR, 'Data', 'train.csv')
-# MODEL_SAVE_PATH = os.path.join(BASE_DIR, 'models', 'distilbert_toxic')
-
-# # Model Parameters
-# MODEL_NAME = 'distilbert-base-uncased'
-# MAX_LEN = 128
-
-# # --- TUNING CHO RTX 3060 6GB ---
-# # 1. Giảm Batch Size xuống 8 để an toàn cho VRAM 6GB
-# BATCH_SIZE = 8  
-
-# # 2. Tăng số bước tích lũy gradient để mô phỏng batch size lớn hơn
-# # (8 batch size * 2 accumulation = tương đương train batch 16)
-# GRADIENT_ACCUMULATION_STEPS = 2 
-
-# EPOCHS = 3
-# LEARNING_RATE = 2e-5
-# FP16 = True # Bật chế độ tính toán 16-bit (quan trọng cho RTX 30xx)
-
-# # Labels
-# LABEL_COLS = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
-
+Module này chứa tất cả các cấu hình cần thiết cho training và inference:
+    - Đường dẫn đến dữ liệu và model
+    - Cấu hình model (tên model, max length)
+    - Hyperparameters cho training (batch size, learning rate, epochs)
+    - Danh sách các labels cần dự đoán
+"""
 
 import torch
 import os
 
+# ==============================================================================
+# DEVICE CONFIGURATION
+# ==============================================================================
+# Tự động chọn GPU nếu có, nếu không thì dùng CPU
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+# ==============================================================================
+# PATH CONFIGURATION
+# ==============================================================================
+# Lấy đường dẫn thư mục gốc của project (Module_Tranformer)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Đường dẫn đến file dữ liệu training
 DATA_PATH = os.path.join(BASE_DIR, 'Data', 'train.csv')
+
+# Đường dẫn để lưu model sau khi training
 MODEL_SAVE_PATH = os.path.join(BASE_DIR, 'models', 'roberta_toxic') 
 
+# ==============================================================================
+# MODEL CONFIGURATION
+# ==============================================================================
+# Tên pre-trained model từ HuggingFace (RoBERTa base)
 MODEL_NAME = 'roberta-base' 
+
+# Độ dài tối đa của sequence (số tokens)
+# RoBERTa có giới hạn 512, nhưng dùng 128 để tiết kiệm bộ nhớ và tăng tốc
 MAX_LEN = 128
 
-# Config cho RTX 3060
-BATCH_SIZE = 8
-GRADIENT_ACCUMULATION_STEPS = 2
-EPOCHS = 4 
-LEARNING_RATE = 1e-5
-FP16 = True
+# ==============================================================================
+# TRAINING HYPERPARAMETERS
+# ==============================================================================
+# Config tối ưu cho RTX 3060 (6GB VRAM)
+BATCH_SIZE = 8  # Batch size cho mỗi device (giảm nếu hết VRAM)
+GRADIENT_ACCUMULATION_STEPS = 2  # Tích lũy gradient để mô phỏng batch size = 16
+EPOCHS = 4  # Số epoch training
+LEARNING_RATE = 1e-5  # Learning rate cho fine-tuning (thấp hơn pre-training)
+FP16 = True  # Bật mixed precision training để tiết kiệm VRAM và tăng tốc
 
+# ==============================================================================
+# LABEL CONFIGURATION
+# ==============================================================================
+# Danh sách 6 labels cho multi-label classification
+# Mỗi văn bản có thể có nhiều labels cùng lúc (ví dụ: vừa toxic vừa insult)
 LABEL_COLS = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
