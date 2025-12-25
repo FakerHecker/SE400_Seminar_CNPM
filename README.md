@@ -1,4 +1,4 @@
-## Hướng dẫn chạy Module AI
+## Hướng dẫn chạy Module AI (Require: Python >= 3.10)
 
 ### Bước 0: Clone Project
 
