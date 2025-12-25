@@ -19,7 +19,7 @@ python -m venv venv
 # Cài đặt các packages cần thiết
 pip install -r requirements.txt
 ```
-*Lưu ý: Nếu muốn chạy luôn thì cài đặt thêm model nằm ở đây: https://drive.google.com/file/d/1mr5KgYs_VOVmBdN-nEr4wZjaktWv2KLt/view?usp=sharing*
+*Lưu ý: Nếu muốn chạy luôn thì cài đặt thêm model nằm ở đây: https://drive.google.com/file/d/1mr5KgYs_VOVmBdN-nEr4wZjaktWv2KLt/view?usp=sharing, sau đó chuyển thư mục vừa tải vào folder "Module_Tranformer"*
 
 ### Bước 3: Chạy Server
 
