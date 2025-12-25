@@ -2,7 +2,10 @@
 
 ### Bước 0: Clone Project
 
-### Bước 1: Chuyển về thư mục: module/tranformer
+### Bước 1: Chuyển về thư mục: 
+```bash
+cd Module_Tranformer
+```
 
 ### Bước 2: Cài đặt Dependencies
 
